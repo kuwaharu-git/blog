@@ -79,9 +79,9 @@ updated_at: 2026-02-08T00:00:00.000Z
 ## API エンドポイント
 
 ### 記事関連
-- `GET /api/posts` - 記事一覧取得（いいね数含む）
-- `GET /api/posts/[id]` - 記事詳細取得
-- `POST /api/posts` - 記事作成
+- `GET /api/posts` - 記事一覧取得（Markdownファイルから読み込み、いいね数はDBから取得）
+- `GET /api/posts/[id]` - 記事詳細取得（Markdownファイルから読み込み）
+- `POST /api/posts` - 記事作成（Markdownファイルとして保存）
 
 ### いいね関連
 - `POST /api/likes` - いいね追加
