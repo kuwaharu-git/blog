@@ -96,11 +96,12 @@ export function createPost(title: string, content: string): Post {
   const newId = ids.length > 0 ? Math.max(...ids) + 1 : 1;
   const now = new Date().toISOString();
   
+  // Create a simple slug from the ID and first few chars of title
   const slug = title
     .toLowerCase()
     .replace(/[^\w\s-]/g, '')
     .replace(/\s+/g, '-')
-    .substring(0, 50);
+    .substring(0, 50) || 'post';
   
   const fileName = `${newId}-${slug}.md`;
   const filePath = path.join(postsDirectory, fileName);
