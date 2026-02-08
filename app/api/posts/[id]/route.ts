@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import { getPostById } from '@/lib/posts';
 
 export async function GET(
   request: Request,
@@ -7,26 +8,33 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const [rows]: any = await pool.query(`
-      SELECT 
-        p.id,
-        p.title,
-        p.content,
-        p.created_at,
-        COUNT(l.id) as like_count
-      FROM posts p
-      LEFT JOIN likes l ON p.id = l.post_id
-      WHERE p.id = ?
-      GROUP BY p.id, p.title, p.content, p.created_at
-    `, [id]);
+    const postId = parseInt(id, 10);
     
-    if (rows.length === 0) {
+    if (isNaN(postId)) {
+      return NextResponse.json({ error: 'Invalid post ID' }, { status: 400 });
+    }
+    
+    // Get post from markdown file
+    const post = getPostById(postId);
+    
+    if (!post) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
     
-    return NextResponse.json(rows[0]);
+    // Get like count from database
+    const [rows]: any = await pool.query(
+      'SELECT COUNT(*) as like_count FROM likes WHERE post_id = ?',
+      [postId]
+    );
+    
+    const postWithLikes = {
+      ...post,
+      like_count: rows[0]?.like_count || 0,
+    };
+    
+    return NextResponse.json(postWithLikes);
   } catch (error) {
-    console.error('Database error:', error);
+    console.error('Error:', error);
     return NextResponse.json({ error: 'Failed to fetch post' }, { status: 500 });
   }
 }

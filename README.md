@@ -1,18 +1,20 @@
 # Blog
 
-Next.js + MySQL + Dockerで構築したブログアプリケーション
+Next.js + Markdownファイル + MySQL(いいね機能のみ) + Dockerで構築したブログアプリケーション
 
 ## 機能
 
 - ブログ記事の一覧表示
 - 記事の詳細表示
 - いいね機能（MySQLに保存）
+- 記事はMarkdownファイルで管理
 
 ## 技術スタック
 
 - **フロントエンド**: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS
 - **バックエンド**: Next.js API Routes
-- **データベース**: MySQL 8.0
+- **記事ストレージ**: Markdownファイル (gray-matter)
+- **データベース**: MySQL 8.0 (いいね機能のみ)
 - **インフラ**: Docker, Docker Compose
 
 ## セットアップ
@@ -52,16 +54,24 @@ npm run dev
 
 ## データベース構造
 
-### posts テーブル
-- id: INT (PRIMARY KEY)
-- title: VARCHAR(255)
-- content: TEXT
-- created_at: TIMESTAMP
-- updated_at: TIMESTAMP
+### posts ディレクトリ
+記事はMarkdownファイルとして`posts/`ディレクトリに保存されます。
+
+ファイル形式:
+```markdown
+---
+id: 1
+title: 記事タイトル
+created_at: 2026-02-08T00:00:00.000Z
+updated_at: 2026-02-08T00:00:00.000Z
+---
+
+記事本文をここに書きます。
+```
 
 ### likes テーブル
 - id: INT (PRIMARY KEY)
-- post_id: INT (FOREIGN KEY)
+- post_id: INT
 - user_id: VARCHAR(255)
 - created_at: TIMESTAMP
 - UNIQUE制約: (post_id, user_id)

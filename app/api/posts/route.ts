@@ -1,24 +1,29 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import { getAllPosts, createPost } from '@/lib/posts';
 
 export async function GET() {
   try {
-    const [rows] = await pool.query(`
-      SELECT 
-        p.id,
-        p.title,
-        p.content,
-        p.created_at,
-        COUNT(l.id) as like_count
-      FROM posts p
-      LEFT JOIN likes l ON p.id = l.post_id
-      GROUP BY p.id, p.title, p.content, p.created_at
-      ORDER BY p.created_at DESC
-    `);
+    // Get all posts from markdown files
+    const posts = getAllPosts();
     
-    return NextResponse.json(rows);
+    // Get like counts from database for each post
+    const postsWithLikes = await Promise.all(
+      posts.map(async (post) => {
+        const [rows]: any = await pool.query(
+          'SELECT COUNT(*) as like_count FROM likes WHERE post_id = ?',
+          [post.id]
+        );
+        return {
+          ...post,
+          like_count: rows[0]?.like_count || 0,
+        };
+      })
+    );
+    
+    return NextResponse.json(postsWithLikes);
   } catch (error) {
-    console.error('Database error:', error);
+    console.error('Error:', error);
     return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 });
   }
 }
@@ -31,14 +36,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
     }
     
-    const [result] = await pool.query(
-      'INSERT INTO posts (title, content) VALUES (?, ?)',
-      [title, content]
-    );
+    // Create post in markdown file
+    const post = createPost(title, content);
     
-    return NextResponse.json({ success: true, result }, { status: 201 });
+    return NextResponse.json({ success: true, post }, { status: 201 });
   } catch (error) {
-    console.error('Database error:', error);
+    console.error('Error:', error);
     return NextResponse.json({ error: 'Failed to create post' }, { status: 500 });
   }
 }
