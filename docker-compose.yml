@@ -1,0 +1,42 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: blog-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: blog
+      MYSQL_USER: bloguser
+      MYSQL_PASSWORD: blogpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - blog-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: blog-app
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: mysql://bloguser:blogpassword@mysql:3306/blog
+    depends_on:
+      - mysql
+    networks:
+      - blog-network
+    command: sh -c "npm install && npm run dev"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+
+volumes:
+  mysql_data:
+
+networks:
+  blog-network:
+    driver: bridge
